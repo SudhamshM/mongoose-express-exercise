@@ -101,7 +101,7 @@ exports.update = (req, res, next)=>{
        {
         if (story)
         {
-            res.redirect('/stories' + id);
+            res.redirect('/stories/' + id);
         }
         else
         {
