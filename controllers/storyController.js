@@ -1,8 +1,10 @@
 const Story = require('../models/story');
-exports.index = (req, res)=>{
+exports.index = (req, res, next)=>{
     //res.send('send all stories');
-    let stories = Story.find();
-    res.render('./story/index', {stories});
+    Story.find()
+    .then((stories) => res.render('./story/index', {stories}))
+    .catch(err => next(err));
+    
 };
 
 exports.new = (req, res)=>{
@@ -31,14 +33,29 @@ exports.create = (req, res, next)=>{
 exports.show = (req, res, next) =>
 {
     let id = req.params.id;
-    let story = Story.findById(id);
-    if(story) {
-        res.render('./story/show', {story});
-    } else {
-        let err = new Error('Cannot find a story with id ' + id);
-        err.status = 404;
-        next(err);
+    // objectId is a 24-bit hex string, so if id is less than that, we get an error
+    if (!id.match(/^[0-9a-fA-F]{24}$/))
+    {
+        let err = new Error(`Invalid story id ${id}`);
+        err.status = 400;
+        return next(err);
     }
+    Story.findById(id)
+    .then((story) =>
+    {
+        if(story)
+        {
+            res.render('./story/show', {story});
+        }
+        else
+        {
+            let err = new Error('Cannot find a story with id ' + id);
+            err.status = 404;
+            next(err);
+        }
+    })
+    .catch(err => next(err));
+    
    
 };
 
