@@ -11,17 +11,5 @@ const storySchema = new Schema(
 );
 
 // collection name is stories in db
-const Story = mongoose.model('Story', storySchema);
+module.exports = mongoose.model('Story', storySchema);
 
-let story = new Story(
-    {
-        title: 'Test Story',
-        author: 'Sudhamsh',
-        content: 'Story',
-    }
-)
-
-story.validate()
-.then(() => console.log("validation successful"))
-.catch(err => console.log(err.message))
-console.log(story);
