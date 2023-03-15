@@ -61,27 +61,63 @@ exports.show = (req, res, next) =>
 
 exports.edit = (req, res, next)=>{
     let id = req.params.id;
-    let story = Story.findById(id);
-    if(story) {
-        res.render('./story/edit', {story});
-    } else {
-        let err = new Error('Cannot find a story with id ' + id);
-        err.status = 404;
-        next(err);
+    // verify id is 24-bit hex string for objectId
+    if (!id.match(/^[0-9a-fA-F]{24}$/))
+    {
+        let err = new Error(`Invalid story id ${id}`);
+        err.status = 400;
+        return next(err);
     }
+    Story.findById(id)
+    .then((story) =>
+    {
+        if(story)
+        {
+            res.render('./story/edit', {story});
+        }
+        else
+        {
+            let err = new Error('Cannot find a story with id ' + id);
+            err.status = 404;
+            next(err);
+        }
+    })
+    .catch(err => next(err));
 };
 
 exports.update = (req, res, next)=>{
     let story = req.body;
     let id = req.params.id;
+    // verify id is 24-bit hex string for objectId
+    if (!id.match(/^[0-9a-fA-F]{24}$/))
+    {
+        let err = new Error(`Invalid story id ${id}`);
+        err.status = 400;
+        return next(err);
+    }
 
-   if (Story.updateById(id, story)) {
-       res.redirect('/stories/'+id);
-   } else {
-    let err = new Error('Cannot find a story with id ' + id);
-        err.status = 404;
-        next(err);
-   }
+   Story.findByIdAndUpdate(id, story, {useFindAndModify: false, runValidators: true})
+       .then((story) =>
+       {
+        if (story)
+        {
+            res.redirect('/stories' + id);
+        }
+        else
+        {
+            let err = new Error('Cannot find a story with id ' + id);
+            err.status = 404;
+            next(err);
+        }
+       })
+       .catch(err =>
+        {
+            if (err.name == 'ValidationError')
+            {
+                err.status = 400;
+            }
+            next(err);
+        })
 };
 
 exports.delete = (req, res, next)=>{
